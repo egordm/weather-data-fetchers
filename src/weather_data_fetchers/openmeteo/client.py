@@ -11,7 +11,7 @@ from pydantic_extra_types.coordinate import Coordinate
 from weather_data_fetchers.core.base_model import BaseModel
 from weather_data_fetchers.core.exceptions import MissingExtraError
 from weather_data_fetchers.core.rate_limiter import RateLimiter
-from weather_data_fetchers.core.utils.datetime import DateRange
+from weather_data_fetchers.core.types import DateRange
 from weather_data_fetchers.core.utils.itertools import not_none
 
 try:
@@ -24,11 +24,18 @@ except ImportError as e:
 
 
 class OpenMeteoRequestParams(BaseModel):
+    """Parameters for Open-Meteo API requests."""
+
     coordinate: Coordinate
     variables: Sequence[str]
     date_range: DateRange
 
     def to_api_params(self) -> dict[str, Any]:
+        """Convert to API parameters dict.
+
+        Returns:
+            Dictionary of API parameters.
+        """
         return {
             "latitude": self.coordinate.latitude,
             "longitude": self.coordinate.longitude,
@@ -39,12 +46,18 @@ class OpenMeteoRequestParams(BaseModel):
 
     @property
     def request_size(self) -> float:
+        """Estimated request size for rate limiting."""
         n_days = self.date_range.num_days
         n_vars = len(self.variables)
         n_locations, n_models = 1, 1
         return max(round((n_days / 14.0) * (n_vars / 10.0) * n_locations * n_models, 1), 1.0)
 
     def split(self, max_request_size: float) -> Sequence[Self]:
+        """Split request into smaller chunks.
+
+        Returns:
+            List of split request parameters.
+        """
         max_days_per_chunk = max(1, int(max_request_size * 140 / len(self.variables)))
 
         return [
@@ -54,12 +67,15 @@ class OpenMeteoRequestParams(BaseModel):
 
 
 class OpenMeteoDataClient(BaseModel):
+    """Client for fetching weather data from Open-Meteo API."""
+
     api_key: SecretStr | None = Field(
         default=None, description="API key for Open-Meteo. If not provided, free tier will be used."
     )
 
     forecast_previous_runs_url: str = Field(default="https://previous-runs-api.open-meteo.com/v1/forecast")
     forecast_historical_url: str = Field(default="https://historical-forecast-api.open-meteo.com/v1/forecast")
+    measurement_archive_url: str = Field(default="https://archive-api.open-meteo.com/v1/archive")
 
     max_request_size: float = Field(
         default=10.0,
@@ -96,6 +112,11 @@ class OpenMeteoDataClient(BaseModel):
         url: str,
         params: OpenMeteoRequestParams,
     ) -> pd.DataFrame:
+        """Fetch hourly weather data, splitting large requests if needed.
+
+        Returns:
+            DataFrame with weather data.
+        """
         split_params = params.split(self.max_request_size)
         if len(split_params) == 1:
             return self._get_hourly_data_unsafe(url, split_params[0])

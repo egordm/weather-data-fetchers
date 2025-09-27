@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from typing import Literal
 
-type OpenMeteoFeature = Literal[
+type ForecastVariable = Literal[
     "temperature_2m",
     "relative_humidity_2m",
     "dew_point_2m",
@@ -59,7 +59,7 @@ type OpenMeteoFeature = Literal[
 ]
 
 
-type OpenMeteoFeatureVersioned = Literal[
+type VersionedForecastVariable = Literal[
     "temperature_2m",
     "relative_humidity_2m",
     "dew_point_2m",
@@ -93,8 +93,60 @@ type OpenMeteoFeatureVersioned = Literal[
     "terrestrial_radiation_instant",
 ]
 
+type MeasurementVariable = Literal[
+    "temperature_2m",
+    "relative_humidity_2m",
+    "dew_point_2m",
+    "apparent_temperature",
+    "precipitation",
+    "rain",
+    "snowfall",
+    "snow_depth",
+    "weather_code",
+    "pressure_msl",
+    "surface_pressure",
+    "cloud_cover",
+    "cloud_cover_mid",
+    "cloud_cover_low",
+    "cloud_cover_high",
+    "et0_fao_evapotranspiration",
+    "vapour_pressure_deficit",
+    "wind_speed_10m",
+    "wind_speed_100m",
+    "wind_direction_10m",
+    "wind_direction_100m",
+    "wind_gusts_10m",
+    "soil_temperature_0_to_7cm",
+    "soil_temperature_7_to_28cm",
+    "soil_temperature_28_to_100cm",
+    "soil_temperature_100_to_255cm",
+    "soil_moisture_0_to_7cm",
+    "soil_moisture_28_to_100cm",
+    "soil_moisture_7_to_28cm",
+    "soil_moisture_100_to_255cm",
+    "wet_bulb_temperature_2m",
+    "boundary_layer_height",
+    "total_column_integrated_water_vapour",
+    "is_day",
+    "sunshine_duration",
+    "albedo",
+    "snow_depth_water_equivalent",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "direct_normal_irradiance",
+    "global_tilted_irradiance",
+    "terrestrial_radiation",
+    "shortwave_radiation_instant",
+    "direct_radiation_instant",
+    "diffuse_radiation_instant",
+    "direct_normal_irradiance_instant",
+    "global_tilted_irradiance_instant",
+    "terrestrial_radiation_instant",
+]
 
-DEFAULT_FEATURES: Sequence[OpenMeteoFeature] = [
+
+DEFAULT_FORECAST_VARIABLES: Sequence[ForecastVariable] = [
     "temperature_2m",
     "relative_humidity_2m",
     "surface_pressure",
@@ -109,13 +161,26 @@ DEFAULT_FEATURES: Sequence[OpenMeteoFeature] = [
 ]
 
 
-DEFAULT_FEATURES_VERSIONED: Sequence[OpenMeteoFeatureVersioned] = [
+DEFAULT_FORECAST_VARIABLES_VERSIONED: Sequence[VersionedForecastVariable] = [
     "temperature_2m",
     "relative_humidity_2m",
     "surface_pressure",
     "cloud_cover",
     "wind_speed_10m",
     "wind_speed_80m",
+    "wind_direction_10m",
+    "shortwave_radiation",
+    "direct_radiation",
+    "diffuse_radiation",
+    "direct_normal_irradiance",
+]
+
+DEFAULT_MEASUREMENT_VARIABLES: Sequence[MeasurementVariable] = [
+    "temperature_2m",
+    "relative_humidity_2m",
+    "surface_pressure",
+    "cloud_cover",
+    "wind_speed_10m",
     "wind_direction_10m",
     "shortwave_radiation",
     "direct_radiation",

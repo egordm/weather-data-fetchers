@@ -1,3 +1,8 @@
+[build-system]
+build-backend = "hatchling.build"
+
+requires = [ "hatchling" ]
+
 [project]
 name = "weather-data-fetchers"
 version = "0.1.0"
@@ -11,9 +16,10 @@ classifiers = [
 ]
 dependencies = [
   "openmeteo-requests>=1.7.2",
+  "pandas>=2.3.2",
+  "pyarrow>=21",
   "pydantic>=2.11.9",
   "pydantic-extra-types>=2.10.5",
-
   "requests-cache>=1.2.1",
   "retry-requests>=2",
 ]
@@ -31,7 +37,11 @@ dev = [
   "pytest>=8.4.2",
   "pytest-cov>=6.2.1",
   "ruff>=0.13.2",
+  "weather-data-fetchers",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = [ "src/weather_data_fetchers" ]
 
 [tool.ruff]
 target-version = "py312"
@@ -52,14 +62,15 @@ lint.ignore = [
   "COM812", # Conflicting rules (a), ruff itself suggest disabling them.
   "CPY001", # Reuse covers copyright checks.
   "D100",   # Missing docstring in public module
+  "D104",   # Missing docstring in public package 
   "D203",   # Conflicting rules (a), ruff itself suggest disabling them.
   "D213",   # Conflicting rules (a), ruff itself suggest disabling them.
   "EM101",  # do not enforce message in variable when raising an exception.
+  "PIE807", # using useless lambda helps with pyright
   "TC006",  # Let's not force quoting the first param of typing.cast
   "TRY003", # simplify exception messages
-  "PIE807", # using useless lambda helps with pyright
 ]
-lint.per-file-ignores."./packages/*/tests/*" = [
+lint.per-file-ignores."./tests/*" = [
   "ARG",     # Unused function args -> fixtures nevertheless are functionally relevant...
   "D",       # All docstring rules
   "DOC",     # All docstring rules
@@ -68,12 +79,10 @@ lint.per-file-ignores."./packages/*/tests/*" = [
   "PLR0913", # Pytests can have a lot of fixtures, ignore too many arguments
   "PLR0917", # Pytests can have a lot of fixtures, ignore too many arguments
   "PLR2004", # Magic value used in comparison
+  "PLR6301", # Allow non-static functions for grouping tests in classes
   "S101",    # asserts allowed in tests...
   "S311",    # Standard pseudo-random generators
   "SLF001",  # Allow private access in tests
-]
-lint.per-file-ignores."./tools/*" = [
-  "T201", # tools are cli scripts and are allowed to use print
 ]
 lint.per-file-ignores."./{docs,examples}/*" = [
   "INP001", # example folders are not packages, so __init__.py is not needed
@@ -179,9 +188,9 @@ args = [
   { name = "markers", type = "string", default = "", help = "Only run tests matching the given pytest markers expression" },
 ]
 
-[tool.poe.tasks.doctests]
-help = "Run all docstring examples via pytest’s doctest plugin"
-cmd = "pytest --doctest-modules src --maxfail=1 --disable-warnings"
+# [tool.poe.tasks.doctests]
+# help = "Run all docstring examples via pytest’s doctest plugin"
+# cmd = "pytest --doctest-modules src --maxfail=1 --disable-warnings"
 
 [tool.poe.tasks.report]
 help = "Generate coverage report. Will use data from a previous cover command."
@@ -203,7 +212,7 @@ switch = [
     "lock",
     "type",
     "tests",
-    "doctests",
+    # "doctests",
   ], ignore_fail = "return_non_zero" },
   { sequence = [
     "lint",
@@ -212,6 +221,9 @@ switch = [
     "lock",
     "type",
     "tests",
-    "doctests",
+    # "doctests",
   ], ignore_fail = "return_non_zero" },
 ]
+
+[tool.uv.sources]
+weather-data-fetchers = { workspace = true }

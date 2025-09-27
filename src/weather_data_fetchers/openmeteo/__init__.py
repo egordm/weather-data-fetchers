@@ -1,4 +1,4 @@
-from .models import OpenMeteoFeature, OpenMeteoFeatureVersioned
+from .models import ForecastVariable, MeasurementVariable, VersionedForecastVariable
 from .repository import OpenMeteoDataRepository
 
-__all__ = ["OpenMeteoDataRepository", "OpenMeteoFeature", "OpenMeteoFeatureVersioned"]
+__all__ = ["ForecastVariable", "MeasurementVariable", "OpenMeteoDataRepository", "VersionedForecastVariable"]

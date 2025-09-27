@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 
 class DateRange(BaseModel):
+    """Represents a range of dates with start and end."""
+
     start: date
     end: date
 
@@ -15,9 +17,15 @@ class DateRange(BaseModel):
 
     @property
     def num_days(self) -> int:
+        """Number of days in the range."""
         return (self.end - self.start).days + 1
 
     def split(self, max_days: int) -> Iterator[Self]:
+        """Split the range into chunks of max_days.
+
+        Yields:
+            DateRange: Chunks of the original range.
+        """
         for offset in range(0, self.num_days, max_days):
             chunk_start = self.start + timedelta(days=offset)
             chunk_end = min(chunk_start + timedelta(days=max_days - 1), self.end)
