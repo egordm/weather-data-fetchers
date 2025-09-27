@@ -33,7 +33,7 @@ data = repository.get_forecasts(
 )
 
 logger.info("Fetched weather data:")
-logger.info(data.data.head())
+logger.info(data.head())
 
 data.to_parquet(path=output_dir / "weather_data.parquet")
 
@@ -47,6 +47,6 @@ versioned_data = repository.get_versioned_forecasts(
 )
 
 logger.info("Fetched versioned weather data:")
-logger.info(versioned_data.data_parts[0].data.head())
+logger.info(versioned_data.head())
 
 versioned_data.to_parquet(path=output_dir / "weather_data_versioned.parquet")
