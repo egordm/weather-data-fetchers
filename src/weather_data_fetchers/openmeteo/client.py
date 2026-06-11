@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence
 from datetime import timedelta
 from logging import Logger
-from typing import Any, Self, cast, override
+from typing import Any, Literal, Self, cast, override
 
 import pandas as pd
 from pydantic import Field, PrivateAttr, SecretStr
@@ -23,12 +23,37 @@ except ImportError as e:
     raise MissingExtraError(extra="openmeteo") from e
 
 
+class OpenMeteoUnits(BaseModel):
+    """Unit selection for Open-Meteo responses. Defaults match the API defaults.
+
+    Note the API default for wind speed is km/h, NOT m/s; physics consumers (e.g. turbine power
+    curves) almost always want `wind_speed="ms"` and should say so explicitly.
+    """
+
+    wind_speed: Literal["kmh", "ms", "mph", "kn"] = "kmh"
+    temperature: Literal["celsius", "fahrenheit"] = "celsius"
+    precipitation: Literal["mm", "inch"] = "mm"
+
+    def to_api_params(self) -> dict[str, str]:
+        """Convert to API unit parameters.
+
+        Returns:
+            Dictionary of unit-selection API parameters.
+        """
+        return {
+            "wind_speed_unit": self.wind_speed,
+            "temperature_unit": self.temperature,
+            "precipitation_unit": self.precipitation,
+        }
+
+
 class OpenMeteoRequestParams(BaseModel):
     """Parameters for Open-Meteo API requests."""
 
     coordinate: Coordinate
     variables: Sequence[str]
     date_range: DateRange
+    units: OpenMeteoUnits = Field(default_factory=OpenMeteoUnits)
 
     def to_api_params(self) -> dict[str, Any]:
         """Convert to API parameters dict.
@@ -42,6 +67,7 @@ class OpenMeteoRequestParams(BaseModel):
             "hourly": self.variables,
             "start_date": self.date_range.start.isoformat(),
             "end_date": self.date_range.end.isoformat(),
+            **self.units.to_api_params(),
         }
 
     @property
@@ -60,8 +86,9 @@ class OpenMeteoRequestParams(BaseModel):
         """
         max_days_per_chunk = max(1, int(max_request_size * 140 / len(self.variables)))
 
+        # model_copy keeps every other field (units, future additions) intact on the chunks.
         return [
-            self.__class__(coordinate=self.coordinate, variables=self.variables, date_range=date_range)
+            self.model_copy(update={"date_range": date_range})
             for date_range in self.date_range.split(max_days_per_chunk)
         ]
 

@@ -10,7 +10,7 @@ from pydantic_extra_types.coordinate import Coordinate
 
 from weather_data_fetchers.core.types import DateRange
 from weather_data_fetchers.core.utils.pandas import resample_timeseries
-from weather_data_fetchers.openmeteo.client import OpenMeteoDataClient, OpenMeteoRequestParams
+from weather_data_fetchers.openmeteo.client import OpenMeteoDataClient, OpenMeteoRequestParams, OpenMeteoUnits
 from weather_data_fetchers.openmeteo.models import (
     DEFAULT_FORECAST_VARIABLES,
     DEFAULT_FORECAST_VARIABLES_VERSIONED,
@@ -25,6 +25,10 @@ class OpenMeteoDataRepository(BaseModel):
     """Repository for transforming Open-Meteo data into structured datasets."""
 
     client: OpenMeteoDataClient = Field(default_factory=OpenMeteoDataClient)
+    units: OpenMeteoUnits = Field(
+        default_factory=OpenMeteoUnits,
+        description="Unit selection applied to every request (API defaults unless overridden).",
+    )
     _logger: Logger = PrivateAttr(default_factory=lambda: logging.getLogger(__name__))
 
     def get_measurements(
@@ -46,6 +50,7 @@ class OpenMeteoDataRepository(BaseModel):
                 coordinate=coordinate,
                 variables=variables,
                 date_range=date_range,
+                units=self.units,
             ),
         )
         return raw_data.pipe(resample_timeseries, sample_interval=sample_interval)
@@ -69,6 +74,7 @@ class OpenMeteoDataRepository(BaseModel):
                 coordinate=coordinate,
                 variables=variables,
                 date_range=date_range,
+                units=self.units,
             ),
         )
         return raw_data.pipe(resample_timeseries, sample_interval=sample_interval)
@@ -96,6 +102,7 @@ class OpenMeteoDataRepository(BaseModel):
                 coordinate=coordinate,
                 variables=request_variables,
                 date_range=date_range,
+                units=self.units,
             ),
         )
 
