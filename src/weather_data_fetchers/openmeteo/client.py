@@ -118,10 +118,29 @@ class OpenMeteoDataClient(BaseModel):
     def _custom_filter(response: requests_cache.Response) -> bool:
         return not response.text.startswith("Unexpected error")
 
+    def _urls_expire_after(self) -> dict[str, Any]:
+        """Per-endpoint cache expiry: historical/archive responses never expire.
+
+        Archive and historical-forecast data are immutable once published (ERA5T preliminary
+        revisions within the last ~3 months are the rare, small exception we accept), so a TTL
+        only forces rate-limited full re-fetches on rebuilds. Only the previous-runs endpoint
+        (recent model runs, still being appended) keeps the default 1h TTL.
+
+        Returns:
+            URL-pattern to expiration mapping for `requests_cache.CachedSession`.
+        """
+        return {
+            f"{self.measurement_archive_url}*": requests_cache.NEVER_EXPIRE,
+            f"{self.forecast_historical_url}*": requests_cache.NEVER_EXPIRE,
+        }
+
     @override
     def model_post_init(self, context: Any) -> None:
         cache_session = requests_cache.CachedSession(
-            cache_name=".cache", expire_after=3600, filter_fn=OpenMeteoDataClient._custom_filter
+            cache_name=".cache",
+            expire_after=3600,
+            urls_expire_after=self._urls_expire_after(),
+            filter_fn=OpenMeteoDataClient._custom_filter,
         )
         retry_session = cast(niquests.Session, retry(cache_session, retries=5, backoff_factor=0.2))
         self._client = openmeteo_requests.Client(session=retry_session)
